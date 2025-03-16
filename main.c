@@ -16,9 +16,10 @@ SDL_Renderer *renderer;
 SDL_Texture *text_texture;
 SDL_Rect text_rect;
 
-menu_item_s menus[2] = {
-    {"Home", 0, NULL, 5, 5, 256, 94},
-    {"Exit", 0, &sdl_stop_event, 5, 104, 256, 94}
+menu_item_s menus[3] = {
+    {"Play", 0, NULL,               0, HEIGHT - (192), 128, 64, 150, 150, 150, 100},
+    {"Settings", 0, NULL,           0, HEIGHT - (128), 178, 64, 150, 150, 150, 255},
+    {"Exit", 0, &sdl_stop_event,    0, HEIGHT - (64), 228, 64, 255, 75, 75, 255}
 };
 
 int main(int argc, char *argv[]) {
@@ -28,12 +29,10 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    //SDL_SetRelativeMouseMode(SDL_TRUE);
-    
-
-    window = SDL_CreateWindow(menus[0].name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+    window = SDL_CreateWindow("SDL Tester", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WIDTH, HEIGHT,
-                              SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_SHOWN);
+                              /*SDL_WINDOW_RESIZABLE | */
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_SHOWN);
     if (window == NULL)
     {
         printf("Could not create window: %s\n", SDL_GetError());
@@ -42,11 +41,11 @@ int main(int argc, char *argv[]) {
 
     TTF_Init();
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    renderer = SDL_CreateRenderer(window, -1,  SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     
     for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
         set_renderer(&menus[i], renderer);
-        set_render_rectangle(&menus[i], window);
+        set_render_shape(&menus[i]);
         set_text_font(&menus[i]);
         set_text_surface(&menus[i], 255, 255, 255, 255);
         set_text_texture(&menus[i]);
@@ -55,7 +54,6 @@ int main(int argc, char *argv[]) {
     SDL_Event event;
     bool canStop = false;
     bool newAction = false;
-    //display_text(renderer, 256, 256, "No action", font, &text_texture, &text_rect);
     while (!canStop)
     { 
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);        
@@ -66,7 +64,6 @@ int main(int argc, char *argv[]) {
             
             switch(event.type){
                 case SDL_QUIT:
-                    //display_text(renderer, 256, 256, "Quit event", font, &text_texture, &text_rect);
                     canStop = true;
                     break;
                 case SDL_MOUSEMOTION:
@@ -74,11 +71,9 @@ int main(int argc, char *argv[]) {
                     break;
                 case SDL_MOUSEBUTTONUP:
                 case SDL_MOUSEBUTTONDOWN:
-                    //display_text(renderer, 256, 256, "Click event", font, &text_texture, &text_rect);
                     handle_mouse_button(menus, (int)COMPUTE_ARRAY_SIZE(menus), event.button);
                     break;
                 case SDL_KEYDOWN:
-                    //display_text(renderer, 256, 256, SDL_GetKeyName(SDL_GetKeyFromScancode(SDL_SCANCODE_W)), font, &text_texture, &text_rect);
                     break;
                 default:
                     printf("Event ignored\n");
@@ -88,7 +83,7 @@ int main(int argc, char *argv[]) {
 
        
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-        for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
+        for(int i = COMPUTE_ARRAY_SIZE(menus); i >= 0; i--){
             render_menu_item(&menus[i]);
         }
         SDL_RenderPresent(renderer);
