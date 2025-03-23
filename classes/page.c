@@ -1,8 +1,15 @@
-#ifndef menu_type
-#define menu_type
+#ifndef page_type
+#define page_type
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "../meta/preprocessors.c"
+
+typedef enum {
+    MENU  = 0,
+    SETTINGS = 1,
+    GAME = 2
+} page_enum;
+
 
 typedef struct {
     // variables

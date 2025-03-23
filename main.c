@@ -10,17 +10,96 @@
 #include "./functions/runtime_funcs.c"
 #include "./meta/preprocessors.c"
 #include "./graphics/renderer.c"
+#include "./classes/character.c"
+#include "./classes/page.c"
+
 const int WIDTH = 800, HEIGHT = 600;
+int mx = -1, my = -1;
 SDL_Window *window;
 SDL_Renderer *renderer;
 SDL_Texture *text_texture;
 SDL_Rect text_rect;
 
+character_template_s character = {
+    "TEST_01",
+    0,
+    {},
+    200,
+    200
+};
+
 menu_item_s menus[3] = {
-    {"Play", 0, NULL,               0, HEIGHT - (192), 128, 64, 150, 150, 150, 100},
+    {"Play", 0, &start_game,        0, HEIGHT - (192), 128, 64, 150, 150, 150, 100},
     {"Settings", 0, NULL,           0, HEIGHT - (128), 178, 64, 150, 150, 150, 255},
     {"Exit", 0, &sdl_stop_event,    0, HEIGHT - (64), 228, 64, 255, 75, 75, 255}
 };
+
+
+void init_menu(){
+    for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
+        set_menu_renderer(&menus[i], renderer);
+        set_menu_render_shape(&menus[i]);
+        set_menu_text_font(&menus[i]);
+        set_menu_text_surface(&menus[i], 255, 255, 255, 255);
+        set_menu_text_texture(&menus[i]);
+    }
+}
+
+void init_character(){
+    set_character_renderer(&character, renderer);
+    set_character_render_shape(&character, ALLY, mx, my);
+}
+
+void switch_mouse_motion(SDL_Event event){
+    switch(current){
+        case MENU:
+        case SETTINGS:
+            handle_menu_mouse_motion(menus, (int)COMPUTE_ARRAY_SIZE(menus), event.motion);
+            break;
+        case GAME:
+            mx = event.motion.x;
+            my = event.motion.y;
+            break;
+    }
+}
+
+void switch_key_down(SDL_Event event){
+    switch(current){
+        case MENU:
+        case SETTINGS:
+            
+            break;
+        case GAME:
+            handle_game_key_down(event.key, &character);
+            break;
+    }
+}
+
+void switch_handle_mouse_button(SDL_Event event){
+    switch(current){
+        case MENU:
+        case SETTINGS:
+            handle_menu_mouse_button(menus, (int)COMPUTE_ARRAY_SIZE(menus), event.button);
+            break;
+        case GAME:
+            break;
+    }
+}
+
+void render_page_content(){
+    switch(current){
+        case MENU:
+            for(int i = COMPUTE_ARRAY_SIZE(menus); i >= 0; i--){
+                render_menu_item(&menus[i]);
+            }
+            break;
+        case GAME:
+            set_character_render_shape(&character, ALLY, mx, my);
+            render_character_item(&character);
+            break;
+    }
+
+}
 
 int main(int argc, char *argv[]) {
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
@@ -42,14 +121,8 @@ int main(int argc, char *argv[]) {
     TTF_Init();
 
     renderer = SDL_CreateRenderer(window, -1,  SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    
-    for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
-        set_renderer(&menus[i], renderer);
-        set_render_shape(&menus[i]);
-        set_text_font(&menus[i]);
-        set_text_surface(&menus[i], 255, 255, 255, 255);
-        set_text_texture(&menus[i]);
-    }
+    init_menu();
+    init_character();
 
     SDL_Event event;
     bool canStop = false;
@@ -67,31 +140,29 @@ int main(int argc, char *argv[]) {
                     canStop = true;
                     break;
                 case SDL_MOUSEMOTION:
-                    handle_mouse_motion(menus, (int)COMPUTE_ARRAY_SIZE(menus), event.motion);
+                    switch_mouse_motion(event);
                     break;
                 case SDL_MOUSEBUTTONUP:
                 case SDL_MOUSEBUTTONDOWN:
-                    handle_mouse_button(menus, (int)COMPUTE_ARRAY_SIZE(menus), event.button);
+                    switch_handle_mouse_button(event);
                     break;
                 case SDL_KEYDOWN:
+                    switch_key_down(event);
                     break;
                 default:
-                    printf("Event ignored\n");
+                    //printf("Event ignored\n");
                     break;
             }
         }
 
-       
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-        for(int i = COMPUTE_ARRAY_SIZE(menus); i >= 0; i--){
-            render_menu_item(&menus[i]);
-        }
+        render_page_content();
         SDL_RenderPresent(renderer);
 
     }
 
     for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
-        free_all(&menus[i]);
+        menu_free_all(&menus[i]);
     }
 
     SDL_DestroyTexture(text_texture);
