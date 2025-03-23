@@ -1,5 +1,6 @@
 // gcc main.c -o main -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf
-
+#include <stdlib.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <SDL2/SDL.h>
@@ -13,6 +14,7 @@
 #include "./classes/character.c"
 #include "./classes/page.c"
 
+
 const int WIDTH = 800, HEIGHT = 600;
 int mx = -1, my = -1;
 SDL_Window *window;
@@ -21,11 +23,18 @@ SDL_Texture *text_texture;
 SDL_Rect text_rect;
 
 character_template_s character = {
-    "TEST_01",
-    0,
+    "AEST_01",
     {},
     200,
     200
+};
+
+
+character_template_s enemies[3] = {
+    { "EEST_01", {}, 400, 400 },
+    { "EEST_02", {}, 100, 250 },
+    { "EEST_03", {}, 500, 150 },
+
 };
 
 menu_item_s menus[3] = {
@@ -50,6 +59,13 @@ void init_character(){
     set_character_render_shape(&character, ALLY, mx, my);
 }
 
+void init_enemies(){
+    for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
+        set_character_renderer(&enemies[i], renderer);
+        set_character_render_shape(&enemies[i], ENEMY, character.x, character.y);
+    }
+}
+
 void switch_mouse_motion(SDL_Event event){
     switch(current){
         case MENU:
@@ -70,6 +86,11 @@ void switch_key_down(SDL_Event event){
             
             break;
         case GAME:
+            for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
+                if(character_collides(&character, &enemies[i])){
+                    //printf("Collides with %d \n", i);
+                }
+            }
             handle_game_key_down(event.key, &character);
             break;
     }
@@ -96,12 +117,23 @@ void render_page_content(){
         case GAME:
             set_character_render_shape(&character, ALLY, mx, my);
             render_character_item(&character);
+
+            for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
+                set_character_render_shape(&enemies[i], ENEMY, character.x, character.y);
+                render_character_item(&enemies[i]);
+                if(character_collides(&character, &enemies[i])){
+                    printf("Collides with %d \n", i);
+                }
+            }
+
+
             break;
     }
 
 }
 
 int main(int argc, char *argv[]) {
+    srand(time(NULL));
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         printf("SDL_Init failed: %s\n", SDL_GetError());
@@ -123,6 +155,7 @@ int main(int argc, char *argv[]) {
     renderer = SDL_CreateRenderer(window, -1,  SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     init_menu();
     init_character();
+    init_enemies();
 
     SDL_Event event;
     bool canStop = false;

@@ -64,6 +64,7 @@ void handle_menu_mouse_button(menu_item_s menus[], int size, SDL_MouseButtonEven
 
 void handle_game_key_down(SDL_KeyboardEvent e, character_template_s* target)
 {
+
     switch (e.keysym.scancode)
     {
         case SDL_SCANCODE_W:
@@ -89,3 +90,4 @@ void handle_game_key_down(SDL_KeyboardEvent e, character_template_s* target)
 void start_game(){
     current = GAME;
 }
+
