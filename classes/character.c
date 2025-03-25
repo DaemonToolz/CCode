@@ -6,12 +6,18 @@
 #include "../meta/preprocessors.c"
 #include "item.c"
 #include <stdio.h>
+#include <time.h>
 
 typedef enum {
     NEUTRAL = 0,
     ALLY,
     ENEMY
 } character_enum;
+
+typedef struct {
+    SDL_Point point;
+    time_t    triggered_at;
+} location_history;
 
 typedef struct {
     // variables
@@ -22,13 +28,32 @@ typedef struct {
     int x;
     int y;
 
+    // Technical
+    bool can_move;
+
+    int width;
+    int height;
+
     // Graphics
     SDL_Renderer *renderer;
-    SDL_Vertex    outer_shape[4];
+    SDL_Vertex   outer_shape[4];
     SDL_Point    outer_shape_points[4];
-
     int _indices[6];
+
+    int total_history;
+    location_history history[1];
 } character_template_s;
+
+void compute_velocity_vector(character_template_s* c, double* vector){
+    if(c->total_history == 0){
+        return;
+    }
+    double dx = c->x - c->history->point.x;
+    double dy = c->y - c->history->point.y;
+    double d = sqrt(dx*dx + dy*dy);
+    *(vector) = dx/d * 5, 
+    *(vector + 1) = dy/d * 5;
+}
 
 void set_rotation_for_point(double angle_rad, int* x, int* y, float origin_point_x, float origin_point_y){
     double angleCos = cos(angle_rad);
@@ -54,6 +79,74 @@ void set_character_item_polygon_coordinates(SDL_Vertex* vertex, int x, int y, in
     // Text
     vertex->tex_coord.x = 1;
     vertex->tex_coord.y = 1;
+}
+
+
+void set_character_render_rect_shape(character_template_s* c, character_enum type, int mx, int my){
+    // {SDL_FPoint, SDL_Color, SDL_FPoint}
+    c->_indices[0] = 0;
+    c->_indices[1] = 1;
+    c->_indices[2] = 2;
+    c->_indices[3] = 2;
+    c->_indices[4] = 3;
+    c->_indices[5] = 0;
+
+    int rgba[4];
+    switch(type) {
+        case ALLY:
+            rgba[0] = 50;
+            rgba[1] = 175;
+            rgba[2] = 50;
+            rgba[3] = 255;
+            break;
+        case ENEMY: 
+            rgba[0] = 175;
+            rgba[1] = 50;
+            rgba[2] = 50;
+            rgba[3] = 255;
+            break;
+        case NEUTRAL: 
+            rgba[0] = 50;
+            rgba[1] = 50;
+            rgba[2] = 50;
+            rgba[3] = 255;
+            break;
+    }
+
+    //     
+    SDL_Point point[4] = {
+        {c->x - (c->width/2), c->y - (c->height/2)},
+        {c->x + (c->width/2), c->y - (c->height/2)},
+        {c->x + (c->width/2), c->y + (c->height/2)},
+        {c->x - (c->width/2), c->y + (c->height/2)},
+    };
+
+    if(c->can_move && mx > 0 && my > 0) {
+        int delta_y = point[3].y - my; 
+        int delta_x = point[3].x - mx;
+        double angle_rad = atan2(delta_y, delta_x) - 1.5;
+        SDL_Point center = {
+            (point[0].x + point[1].x + point[2].x + point[3].x) / 4,
+            (point[0].y + point[1].y + point[2].y + point[3].y) / 4
+        };
+        for(int i = 0; i < COMPUTE_ARRAY_SIZE(point); ++i){
+            set_rotation_for_point(angle_rad, &(point[i].x), &(point[i].y), center.x, center.y);
+        }      
+    }
+
+    for(int i = 0; i < COMPUTE_ARRAY_SIZE(point); ++i){
+        c->outer_shape_points[i] = point[i];
+    
+        set_character_item_polygon_coordinates(
+            &c->outer_shape[i], 
+            point[i].x, 
+            point[i].y,  
+            rgba[0],
+            rgba[1],
+            rgba[2],
+            255);
+    }     
+
 }
 
 void set_character_render_shape(character_template_s* c, character_enum type, int mx, int my){
@@ -95,7 +188,7 @@ void set_character_render_shape(character_template_s* c, character_enum type, in
         {c->x, c->y - 25}   
     };
 
-    if(mx > 0 && my > 0) {
+    if(c->can_move && mx > 0 && my > 0) {
         int delta_y = point[3].y - my; 
         int delta_x = point[3].x - mx;
         double angle_rad = atan2(delta_y, delta_x) - 1.5;
@@ -120,7 +213,6 @@ void set_character_render_shape(character_template_s* c, character_enum type, in
             rgba[2],
             255);
     }     
-
 }
 
 void character_free_all(character_template_s* c){
@@ -139,8 +231,28 @@ void render_character_item(character_template_s* c){
 
 void set_character_renderer(character_template_s* c, SDL_Renderer* renderer){
     c->renderer = renderer;
+    c->total_history = 0;
 }
 
+void move_to_location(character_template_s* c, SDL_Point point){
+    if(c->total_history == COMPUTE_ARRAY_SIZE(c->history)){
+        for(int i = 1; i < COMPUTE_ARRAY_SIZE(c->history); i++){
+            c->history[i-1] = c->history[i];
+        }
+    }
+    
+    c->history[c->total_history].point.x = c->x;
+    c->history[c->total_history].point.y = c->y;
+    c->history[c->total_history].triggered_at = time(0);
+    c->x += point.x;
+    c->y += point.y;
+
+    printf("New Position (%i %i) -> (%i %i) \n", c->x, c->y, c->x + point.x, c->y + point.y);
+
+    if(c->total_history < COMPUTE_ARRAY_SIZE(c->history)){
+        c->total_history++;
+    }
+}
 
 // Function to check if a point lies on a given line segment
 bool on_segment(SDL_Point* p, SDL_Point* q, SDL_Point* r) {
@@ -239,10 +351,111 @@ bool character_collides(character_template_s *main, character_template_s *to_com
             );
 
             if(collision){
-                main->x -= random_number(1,3);
-                main->y -= random_number(1,3);
-                to_compare->x += random_number(1,3);
-                to_compare->y += random_number(1,3);
+                double* v1;
+                double* v2;
+                int newSize = sizeof(*v1);
+                v1 = calloc(2,  newSize);
+                v2 = calloc(2,  newSize);
+
+                compute_velocity_vector(main, v1);
+                compute_velocity_vector(to_compare, v2);
+                double output_vector[2] = {round(*(v1) - *(v2)), round(*(v1 + 1) - *(v2 + 1)) };
+                if(output_vector[0] == 0){
+                    output_vector[0] = 1;
+                }
+
+                if(output_vector[1] == 0){
+                    output_vector[1] = 1;
+                }
+
+                printf("%f x / %f y \n", output_vector[0], output_vector[1] );
+                printf("Main translation (%i -> %i)x / (%i -> %i) y \n", 
+                    main->x, 
+                    main->x + (int)output_vector[0], 
+                    main->y,
+                    main->y + (int)output_vector[1] 
+                );
+    
+                printf("Target translation (%i -> %i)x / (%i -> %i) y \n", 
+                    to_compare->x, 
+                    to_compare->x - (int)output_vector[0], 
+                    to_compare->y,
+                    to_compare->y - (int)output_vector[1] 
+                );
+
+                // If v1 is faster than v2
+                if(output_vector[0] > 0){
+                    if(main->x > to_compare->x){
+                        if(main->can_move){
+                            main->x += output_vector[0];
+                        }
+                        if(to_compare->can_move){
+                            to_compare->x -= output_vector[0];
+                        }
+                    } else {
+                        if(main->can_move){
+                            main->x -= output_vector[0];
+                        }
+                        if(to_compare->can_move){
+                            to_compare->x += output_vector[0];
+                        } 
+                    }
+                } else {         
+                    if(main->x > to_compare->x){
+                        if(main->can_move){
+                            main->x -= output_vector[0];
+                        }
+
+                        if(to_compare->can_move){
+                            to_compare->x += output_vector[0];
+                        }
+                    } else {
+                        if(main->can_move){
+                            main->x += output_vector[0];
+                        }
+
+                        if(to_compare->can_move){
+                            to_compare->x -= output_vector[0];
+                        }
+                    }
+                }
+
+                if(output_vector[1] > 0){
+                    if(main->y < to_compare->y){
+                        if(main->can_move){
+                            main->y -= output_vector[1];  
+                        }
+                        if(to_compare->can_move){
+                            to_compare->y += output_vector[1];
+                        }
+                    } else {
+                        if(main->can_move){
+                            main->y += output_vector[1];  
+                        }
+                        if(to_compare->can_move){
+                            to_compare->y -= output_vector[1];
+                        }
+                    }
+                } else {
+                    if(main->y < to_compare->y){
+                        if(main->can_move){
+                            main->y += output_vector[1]; 
+                        } 
+                        if(to_compare->can_move){
+                            to_compare->y -= output_vector[1];
+                        }
+                    } else {
+                        if(main->can_move){
+                            main->y -= output_vector[1];  
+                        }
+                        if(to_compare->can_move){
+                            to_compare->y += output_vector[1];
+                        }
+                    }
+                }
+
+                free(v1);
+                free(v2);
             }
         }
 

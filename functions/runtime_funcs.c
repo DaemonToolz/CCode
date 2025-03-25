@@ -65,21 +65,30 @@ void handle_menu_mouse_button(menu_item_s menus[], int size, SDL_MouseButtonEven
 void handle_game_key_down(SDL_KeyboardEvent e, character_template_s* target)
 {
 
+    SDL_Point point;
     switch (e.keysym.scancode)
     {
         case SDL_SCANCODE_W:
         case SDL_SCANCODE_Z:
-            target->y-=5;
+            point.x = 0;
+            point.y = -5;
+            move_to_location(target, point);
             break;
         case SDL_SCANCODE_S:
-            target->y+=5;
+            point.x = 0;
+            point.y = 5;
+            move_to_location(target, point);
             break;
         case SDL_SCANCODE_A:
         case SDL_SCANCODE_Q:
-            target->x-=5;
+            point.x = -5;
+            point.y = 0;
+            move_to_location(target, point);
             break;
         case SDL_SCANCODE_D:
-            target->x+=5;
+            point.x = 5;
+            point.y = 0;
+            move_to_location(target, point);
             break;
         case SDL_SCANCODE_ESCAPE:
             current = MENU;

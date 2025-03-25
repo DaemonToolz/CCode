@@ -26,16 +26,24 @@ character_template_s character = {
     "AEST_01",
     {},
     200,
-    200
+    200,
+    true
 };
 
 
 character_template_s enemies[3] = {
-    { "EEST_01", {}, 400, 400 },
-    { "EEST_02", {}, 100, 250 },
-    { "EEST_03", {}, 500, 150 },
-
+    { "EEST_01", {}, 400, 400, true },
+    { "EEST_02", {}, 100, 250, true },
+    { "EEST_03", {}, 500, 150, true },
 };
+
+character_template_s walls[4] = {
+    { "WALL_01", {}, 400, 5,    false, 800, 10 },
+    { "WALL_02", {}, 5,   300,  false, 10, 800 },
+    { "WALL_03", {}, 400, 595,  false, 800, 10 },
+    { "WALL_04", {}, 795, 595,  false, 10, 800 }
+};
+
 
 menu_item_s menus[3] = {
     {"Play", 0, &start_game,        0, HEIGHT - (192), 128, 64, 150, 150, 150, 100},
@@ -66,6 +74,13 @@ void init_enemies(){
     }
 }
 
+void init_walls(){
+    for(int i = 0; i < COMPUTE_ARRAY_SIZE(walls); ++i){
+        set_character_renderer(&walls[i], renderer);
+        set_character_render_rect_shape(&walls[i], NEUTRAL, 0, 0);
+    }
+}
+
 void switch_mouse_motion(SDL_Event event){
     switch(current){
         case MENU:
@@ -87,10 +102,16 @@ void switch_key_down(SDL_Event event){
             break;
         case GAME:
             for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
-                if(character_collides(&character, &enemies[i])){
-                    //printf("Collides with %d \n", i);
+                character_collides(&character, &enemies[i]);
+            }
+
+            for(int j = 0; j < COMPUTE_ARRAY_SIZE(walls); ++j){
+                character_collides(&character, &walls[j]);
+                for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
+                    character_collides(&enemies[i], &walls[j]);
                 }
             }
+
             handle_game_key_down(event.key, &character);
             break;
     }
@@ -121,12 +142,17 @@ void render_page_content(){
             for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
                 set_character_render_shape(&enemies[i], ENEMY, character.x, character.y);
                 render_character_item(&enemies[i]);
-                if(character_collides(&character, &enemies[i])){
-                    printf("Collides with %d \n", i);
-                }
+                character_collides(&character, &enemies[i]);
             }
 
-
+            for(int j = 0; j < COMPUTE_ARRAY_SIZE(walls); ++j){
+                set_character_render_rect_shape(&walls[j], NEUTRAL, 0, 0);
+                render_character_item(&walls[j]);
+                character_collides(&character, &walls[j]);
+                for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
+                    character_collides(&enemies[i], &walls[j]);
+                }
+            }
             break;
     }
 
@@ -156,6 +182,7 @@ int main(int argc, char *argv[]) {
     init_menu();
     init_character();
     init_enemies();
+    init_walls();
 
     SDL_Event event;
     bool canStop = false;
@@ -164,7 +191,7 @@ int main(int argc, char *argv[]) {
     { 
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);        
         SDL_RenderClear(renderer);
-        sleep(0.1);
+
         while (SDL_PollEvent(&event) != 0)
         { 
             
