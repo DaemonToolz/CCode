@@ -13,6 +13,7 @@
 #include "./graphics/renderer.c"
 #include "./classes/character.c"
 #include "./classes/page.c"
+#include "./database/sqlite_driver.c"
 
 
 const int WIDTH = 800, HEIGHT = 600;
@@ -52,6 +53,25 @@ menu_item_s menus[3] = {
 };
 
 
+int load_character_information_cb(void *NotUsed, int argc, char **argv, char **azColName)
+{
+    for (int i = 0; i < argc; i++)
+    {
+        printf("%s CHARACTER_X CHARACTER_Y\n", azColName[i] );
+        if(strcmp((*azColName + i), "CHARACTER_X") == 0){
+            character.x = atoi(argv[i]);
+            printf("X - %s\n", argv[i] );
+        } 
+
+        if(strcmp((*azColName + i), "CHARACTER_Y") == 0){
+            character.y = atoi(argv[i]);
+            printf("Y- %s\n", argv[i] );
+        } 
+        
+    }
+    return 0;
+}
+
 void init_menu(){
     for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
         set_menu_renderer(&menus[i], renderer);
@@ -63,6 +83,7 @@ void init_menu(){
 }
 
 void init_character(){
+    sqlite_select(&load_character_information_cb);
     set_character_renderer(&character, renderer);
     set_character_render_shape(&character, ALLY, mx, my);
 }
@@ -160,6 +181,7 @@ void render_page_content(){
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
+    sqlite_create_database();
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         printf("SDL_Init failed: %s\n", SDL_GetError());
@@ -221,6 +243,7 @@ int main(int argc, char *argv[]) {
 
     }
 
+    sqlite_insert(character.x, character.y);
     for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
         menu_free_all(&menus[i]);
     }
