@@ -1,4 +1,5 @@
-
+#ifndef RUNTIME_FUNC
+#define RUNTIME_FUNC
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -100,3 +101,4 @@ void start_game(){
     current = GAME;
 }
 
+#endif

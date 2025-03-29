@@ -11,66 +11,12 @@
 #include "./functions/runtime_funcs.c"
 #include "./meta/preprocessors.c"
 #include "./graphics/renderer.c"
+#include "./graphics/pages/game_file.c"
 #include "./classes/character.c"
 #include "./classes/page.c"
 #include "./database/sqlite_driver.c"
+#include "./meta/globals.c"
 
-
-const int WIDTH = 800, HEIGHT = 600;
-int mx = -1, my = -1;
-SDL_Window *window;
-SDL_Renderer *renderer;
-SDL_Texture *text_texture;
-SDL_Rect text_rect;
-
-character_template_s character = {
-    "AEST_01",
-    {},
-    200,
-    200,
-    true
-};
-
-
-character_template_s enemies[3] = {
-    { "EEST_01", {}, 400, 400, true },
-    { "EEST_02", {}, 100, 250, true },
-    { "EEST_03", {}, 500, 150, true },
-};
-
-character_template_s walls[4] = {
-    { "WALL_01", {}, 400, 5,    false, 800, 10 },
-    { "WALL_02", {}, 5,   300,  false, 10, 800 },
-    { "WALL_03", {}, 400, 595,  false, 800, 10 },
-    { "WALL_04", {}, 795, 595,  false, 10, 800 }
-};
-
-
-menu_item_s menus[3] = {
-    {"Play", 0, &start_game,        0, HEIGHT - (192), 128, 64, 150, 150, 150, 100},
-    {"Settings", 0, NULL,           0, HEIGHT - (128), 178, 64, 150, 150, 150, 255},
-    {"Exit", 0, &sdl_stop_event,    0, HEIGHT - (64), 228, 64, 255, 75, 75, 255}
-};
-
-
-int load_character_information_cb(void *NotUsed, int argc, char **argv, char **azColName)
-{
-    for (int i = 0; i < argc; i++)
-    {
-        printf("%s CHARACTER_X CHARACTER_Y\n", azColName[i] );
-        if(strcmp((*azColName + i), "CHARACTER_X") == 0){
-            character.x = atoi(argv[i]);
-            printf("X - %s\n", argv[i] );
-        } 
-
-        if(strcmp((*azColName + i), "CHARACTER_Y") == 0){
-            character.y = atoi(argv[i]);
-            printf("Y- %s\n", argv[i] );
-        } 
-        
-    }
-    return 0;
-}
 
 void init_menu(){
     for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
@@ -79,26 +25,6 @@ void init_menu(){
         set_menu_text_font(&menus[i]);
         set_menu_text_surface(&menus[i], 255, 255, 255, 255);
         set_menu_text_texture(&menus[i]);
-    }
-}
-
-void init_character(){
-    sqlite_select(&load_character_information_cb);
-    set_character_renderer(&character, renderer);
-    set_character_render_shape(&character, ALLY, mx, my);
-}
-
-void init_enemies(){
-    for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
-        set_character_renderer(&enemies[i], renderer);
-        set_character_render_shape(&enemies[i], ENEMY, character.x, character.y);
-    }
-}
-
-void init_walls(){
-    for(int i = 0; i < COMPUTE_ARRAY_SIZE(walls); ++i){
-        set_character_renderer(&walls[i], renderer);
-        set_character_render_rect_shape(&walls[i], NEUTRAL, 0, 0);
     }
 }
 
@@ -157,23 +83,7 @@ void render_page_content(){
             }
             break;
         case GAME:
-            set_character_render_shape(&character, ALLY, mx, my);
-            render_character_item(&character);
-
-            for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
-                set_character_render_shape(&enemies[i], ENEMY, character.x, character.y);
-                render_character_item(&enemies[i]);
-                character_collides(&character, &enemies[i]);
-            }
-
-            for(int j = 0; j < COMPUTE_ARRAY_SIZE(walls); ++j){
-                set_character_render_rect_shape(&walls[j], NEUTRAL, 0, 0);
-                render_character_item(&walls[j]);
-                character_collides(&character, &walls[j]);
-                for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
-                    character_collides(&enemies[i], &walls[j]);
-                }
-            }
+            render_game_screen();
             break;
     }
 

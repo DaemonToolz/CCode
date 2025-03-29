@@ -56,7 +56,8 @@ void sqlite_create_database()
     /* Create SQL statement */
     sql = "CREATE TABLE GAME_SAVE("
           "CHARACTER_X    INT     NOT NULL,"
-          "CHARACTER_Y    INT     NOT NULL);";
+          "CHARACTER_Y    INT     NOT NULL,"
+          "TIMESTAMP      INT     NOT NULL);";
 
     /* Execute SQL statement */
     rc = sqlite3_exec(db, sql, sqlite_callback, 0, &zErrMsg);
@@ -95,7 +96,11 @@ void sqlite_select(int (*callback)(void*, int, char**, char**))
     }
 
     /* Create SQL statement */
-    sql = "SELECT * from GAME_SAVE";
+    sql = "SELECT "
+        "CHARACTER_X as 'X'," 
+        "CHARACTER_Y as 'Y',"
+        "TIMESTAMP   as 'T' " 
+        "from GAME_SAVE";
 
     /* Execute SQL statement */
     rc = sqlite3_exec(db, sql, callback, (void *)data, &zErrMsg);
@@ -133,8 +138,9 @@ void sqlite_insert(int x, int y)
     }
 
     /* Create SQL statement */
-    sql = (char*) malloc(128);
-    sprintf(sql, "INSERT INTO GAME_SAVE (CHARACTER_X,CHARACTER_Y) VALUES (%i,%i); ", x, y);
+    time_t timestamp = time( NULL );
+    sql = (char*) malloc(256);
+    sprintf(sql, "INSERT INTO GAME_SAVE (CHARACTER_X,CHARACTER_Y,TIMESTAMP) VALUES (%i,%i,%li); ", x, y, timestamp);
     printf(sql);
     /* Execute SQL statement */
     rc = sqlite3_exec(db, sql, sqlite_callback, 0, &zErrMsg);

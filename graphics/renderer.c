@@ -1,4 +1,5 @@
-
+#ifndef RENDERERS
+#define RENDERERS
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -33,3 +34,4 @@ void display_text(SDL_Renderer *renderer, int x, int y, char *text, TTF_Font *fo
     rect->w = text_width;
     rect->h = text_height;
 }
+#endif
