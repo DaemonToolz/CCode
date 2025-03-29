@@ -30,8 +30,15 @@ int load_character_information_cb(void *NotUsed, int argc, char **argv, char **a
     return 0;
 }
 
+int load_character_information(int x, int y)
+{
+    character.x = x;
+    character.y = y;
+    return 0;
+}
+
+
 void init_character(){
-    sqlite_select(&load_character_information_cb);
     set_character_renderer(&character, renderer);
     set_character_render_shape(&character, ALLY, mx, my);
 }
@@ -63,6 +70,19 @@ void render_game_screen(){
     for(int j = 0; j < COMPUTE_ARRAY_SIZE(walls); ++j){
         set_character_render_rect_shape(&walls[j], NEUTRAL, 0, 0);
         render_character_item(&walls[j]);
+        character_collides(&character, &walls[j]);
+        for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
+            character_collides(&enemies[i], &walls[j]);
+        }
+    }
+}
+
+void check_all_collisions(){
+    for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
+        character_collides(&character, &enemies[i]);
+    }
+
+    for(int j = 0; j < COMPUTE_ARRAY_SIZE(walls); ++j){
         character_collides(&character, &walls[j]);
         for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
             character_collides(&enemies[i], &walls[j]);

@@ -3,12 +3,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "../meta/preprocessors.c"
-
+#include "../meta/globals.c"
 typedef struct {
     // variables
     char name[50];
     int  number;
-    void (*function)();
+    void (*function)(void*);
 
     // display
     int x;
@@ -100,10 +100,11 @@ void set_menu_text_texture(menu_item_s* menu) {
     menu->inner_rect.h = text_height;
 }
 
-void menu_free_all(menu_item_s* item){
+void menu_free(menu_item_s* item){
     SDL_FreeSurface(item->text_surface);
     SDL_DestroyTexture(item->text_texture);
 }
+
 
 void render_menu_item(menu_item_s* menu){
     SDL_RenderGeometry( menu->renderer, 

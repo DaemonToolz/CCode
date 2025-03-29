@@ -11,6 +11,8 @@
 #include "../classes/menu.c"
 #include "../classes/character.c"
 #include "../classes/page.c"
+#include "../classes/save.c"
+#include "../functions/runtime_funcs.c"
 
 
 const int WIDTH = 800, HEIGHT = 600;
@@ -41,10 +43,11 @@ character_template_s walls[4] = {
 
 menu_item_s menus[4] = {
     {"Play", 0, &start_game,        0, HEIGHT - (256), 78, 64, 150, 150, 150, 100},
-    {"Load", 0, NULL,               0, HEIGHT - (192), 128, 64, 150, 150, 150, 255},
+    {"Saves", 0, NULL,              0, HEIGHT - (192), 128, 64, 150, 150, 150, 255},
     {"Settings", 0, NULL,           0, HEIGHT - (128), 178, 64, 150, 150, 150, 255},
     {"Exit", 0, &sdl_stop_event,    0, HEIGHT - (64), 228, 64, 255, 75, 75, 255}
 };
 
+save_item_s* all_saves;
 
 #endif

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "../classes/menu.c"
+#include "../meta/globals.c"
 
 void render_element(SDL_Window* window, SDL_Renderer* renderer, menu_item_s* item){
     SDL_Surface* surface = SDL_GetWindowSurface(window);
@@ -16,6 +17,19 @@ void render_element(SDL_Window* window, SDL_Renderer* renderer, menu_item_s* ite
     //SDL_UpdateWindowSurface(window);
     SDL_RenderFillRect(renderer, &rect);
 }
+
+void render_save_element(SDL_Window* window, SDL_Renderer* renderer, save_item_s* item){
+    SDL_Surface* surface = SDL_GetWindowSurface(window);
+    SDL_Rect rect;
+    rect.x = item->x;
+    rect.y = item->y;
+    rect.w = item->length;
+    rect.h = item->height;
+    SDL_FillRect(surface, &rect, SDL_MapRGBA( surface->format, 255, 0, 0, 255 ) );
+    //SDL_UpdateWindowSurface(window);
+    SDL_RenderFillRect(renderer, &rect);
+}
+
 
 void display_text(SDL_Renderer *renderer, int x, int y, char *text, TTF_Font *font, SDL_Texture **texture, SDL_Rect *rect) {
     int text_width;

@@ -7,26 +7,18 @@
 #include <SDL2/SDL_ttf.h>
 #include <unistd.h>
 #include <windows.h>
-#include "./classes/menu.c"
-#include "./functions/runtime_funcs.c"
+
+#include "./meta/globals.c"
 #include "./meta/preprocessors.c"
 #include "./graphics/renderer.c"
 #include "./graphics/pages/game_file.c"
 #include "./classes/character.c"
 #include "./classes/page.c"
 #include "./database/sqlite_driver.c"
-#include "./meta/globals.c"
-
-
-void init_menu(){
-    for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
-        set_menu_renderer(&menus[i], renderer);
-        set_menu_render_shape(&menus[i]);
-        set_menu_text_font(&menus[i]);
-        set_menu_text_surface(&menus[i], 255, 255, 255, 255);
-        set_menu_text_texture(&menus[i]);
-    }
-}
+#include "./graphics/pages/pause_menu.c"
+#include "./graphics/pages/saves_file.c"
+#include "./classes/menu.c"
+#include "./functions/runtime_funcs.c"
 
 void switch_mouse_motion(SDL_Event event){
     switch(current){
@@ -44,21 +36,13 @@ void switch_mouse_motion(SDL_Event event){
 void switch_key_down(SDL_Event event){
     switch(current){
         case MENU:
+            sqlite_count(&load_count_db);
+            break;
         case SETTINGS:
             
             break;
         case GAME:
-            for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
-                character_collides(&character, &enemies[i]);
-            }
-
-            for(int j = 0; j < COMPUTE_ARRAY_SIZE(walls); ++j){
-                character_collides(&character, &walls[j]);
-                for(int i = 0; i < COMPUTE_ARRAY_SIZE(enemies); ++i){
-                    character_collides(&enemies[i], &walls[j]);
-                }
-            }
-
+            check_all_collisions();
             handle_game_key_down(event.key, &character);
             break;
     }
@@ -78,9 +62,7 @@ void switch_handle_mouse_button(SDL_Event event){
 void render_page_content(){
     switch(current){
         case MENU:
-            for(int i = COMPUTE_ARRAY_SIZE(menus); i >= 0; i--){
-                render_menu_item(&menus[i]);
-            }
+            render_menu_screen();
             break;
         case GAME:
             render_game_screen();
@@ -92,6 +74,7 @@ void render_page_content(){
 int main(int argc, char *argv[]) {
     srand(time(NULL));
     sqlite_create_database();
+    sqlite_count(&load_count_db);
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         printf("SDL_Init failed: %s\n", SDL_GetError());
@@ -111,6 +94,7 @@ int main(int argc, char *argv[]) {
     TTF_Init();
 
     renderer = SDL_CreateRenderer(window, -1,  SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    init_saves();
     init_menu();
     init_character();
     init_enemies();
@@ -154,10 +138,11 @@ int main(int argc, char *argv[]) {
     }
 
     sqlite_insert(character.x, character.y);
-    for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
-        menu_free_all(&menus[i]);
-    }
 
+    for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
+        menu_free(&menus[i]);
+    }
+    free_all_saves();
     SDL_DestroyTexture(text_texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

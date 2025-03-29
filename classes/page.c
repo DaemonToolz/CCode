@@ -3,11 +3,13 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "../meta/preprocessors.c"
+#include "../meta/globals.c"
 
 typedef enum {
-    MENU  = 0,
-    SETTINGS = 1,
-    GAME = 2
+    MENU = 0,
+    SETTINGS,
+    SAVES,
+    GAME
 } page_enum;
 
 
