@@ -44,6 +44,7 @@ typedef struct {
     location_history history[1];
 } character_template_s;
 
+
 void compute_velocity_vector(character_template_s* c, double* vector){
     if(c->total_history == 0){
         return;

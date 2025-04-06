@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_keyboard.h>
 #include <unistd.h>
 #include <windows.h>
 
@@ -20,10 +21,15 @@
 #include "./classes/menu.c"
 #include "./functions/runtime_funcs.c"
 
+// https://stackoverflow.com/questions/60421225/cleanup-function-in-c
+// https://stackoverflow.com/questions/368385/implementing-raii-in-pure-c
+
+
 void switch_mouse_motion(SDL_Event event){
     switch(current){
         case MENU:
         case SETTINGS:
+        case SAVES:
             handle_menu_mouse_motion(menus, (int)COMPUTE_ARRAY_SIZE(menus), event.motion);
             break;
         case GAME:
@@ -33,17 +39,19 @@ void switch_mouse_motion(SDL_Event event){
     }
 }
 
-void switch_key_down(SDL_Event event){
+void switch_key_down(SDL_Event event, const Uint8* states){
     switch(current){
         case MENU:
             sqlite_count(&load_count_db);
+            init_saves();
+            init_save_visual(renderer);
             break;
         case SETTINGS:
-            
+        case SAVES:
             break;
         case GAME:
             check_all_collisions();
-            handle_game_key_down(event.key, &character);
+            handle_game_key_down(event.key, &character, states);
             break;
     }
 }
@@ -52,6 +60,7 @@ void switch_handle_mouse_button(SDL_Event event){
     switch(current){
         case MENU:
         case SETTINGS:
+        case SAVES:
             handle_menu_mouse_button(menus, (int)COMPUTE_ARRAY_SIZE(menus), event.button);
             break;
         case GAME:
@@ -67,14 +76,20 @@ void render_page_content(){
         case GAME:
             render_game_screen();
             break;
+        case SAVES:
+            render_all_saves();
+            break;
     }
 
 }
 
 int main(int argc, char *argv[]) {
-    srand(time(NULL));
+    srand(time(NULL));    
+    init_saves();
     sqlite_create_database();
     sqlite_count(&load_count_db);
+    sleep(1);
+    sqlite_select(&load_all_saves_db);
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         printf("SDL_Init failed: %s\n", SDL_GetError());
@@ -92,14 +107,15 @@ int main(int argc, char *argv[]) {
     }
 
     TTF_Init();
-
     renderer = SDL_CreateRenderer(window, -1,  SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    init_saves();
     init_menu();
     init_character();
     init_enemies();
     init_walls();
 
+    init_save_visual(renderer);
+    
+    const Uint8* keyboard_state_array = SDL_GetKeyboardState(NULL);
     SDL_Event event;
     bool canStop = false;
     bool newAction = false;
@@ -123,7 +139,7 @@ int main(int argc, char *argv[]) {
                     switch_handle_mouse_button(event);
                     break;
                 case SDL_KEYDOWN:
-                    switch_key_down(event);
+                    switch_key_down(event, keyboard_state_array);
                     break;
                 default:
                     //printf("Event ignored\n");
@@ -137,7 +153,7 @@ int main(int argc, char *argv[]) {
 
     }
 
-    sqlite_insert(character.x, character.y);
+    //sqlite_insert(character.x, character.y);
 
     for(int i = 0; i < COMPUTE_ARRAY_SIZE(menus); ++i){
         menu_free(&menus[i]);

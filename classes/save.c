@@ -64,13 +64,13 @@ void set_save_render_shape(save_item_s* save){
     // 
     set_save_item_polygon_coordiantes(save, &save->outer_shape[0], save->x, save->y,                                          save->r,save->g,save->b,255);
     set_save_item_polygon_coordiantes(save, &save->outer_shape[1], save->x + save->length, save->y,                           save->r,save->g,save->b,255);
-    set_save_item_polygon_coordiantes(save, &save->outer_shape[2], save->x + save->length + 50, save->y + save->height,       save->r,save->g,save->b,255);
+    set_save_item_polygon_coordiantes(save, &save->outer_shape[2], save->x + save->length, save->y + save->height,            save->r,save->g,save->b,255);
     set_save_item_polygon_coordiantes(save, &save->outer_shape[3], save->x, save->y + save->height,                           save->r,save->g,save->b,255);
 
     //
     set_save_item_polygon_coordiantes(save, &save->shadow_shape[0], save->x, save->y,                                         50,50,50,50);
-    set_save_item_polygon_coordiantes(save, &save->shadow_shape[1], save->x + save->length, save->y,                          50,50,50,50);
-    set_save_item_polygon_coordiantes(save, &save->shadow_shape[2], save->x + save->length + 50, save->y + save->height + 7,  50,50,50,50);
+    set_save_item_polygon_coordiantes(save, &save->shadow_shape[1], save->x + save->length + 7, save->y,                      50,50,50,50);
+    set_save_item_polygon_coordiantes(save, &save->shadow_shape[2], save->x + save->length + 7, save->y + save->height + 7,   50,50,50,50);
     set_save_item_polygon_coordiantes(save, &save->shadow_shape[3], save->x, save->y + save->height + 7,                      50,50,50,50);
 }
 

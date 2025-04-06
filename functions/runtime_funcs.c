@@ -10,6 +10,9 @@
 #include "../meta/preprocessors.c"
 #include "../database/sqlite_driver.c"
 #include "../graphics/pages/saves_file.c"
+#include "../meta/globals.c"
+
+
 
 page_enum current = MENU;
 
@@ -54,6 +57,18 @@ void handle_menu_mouse_motion(menu_item_s menus[], int size, SDL_MouseMotionEven
 
 }
 
+void handle_save_mouse_button(menu_item_s save[], int size, SDL_MouseButtonEvent E) {
+    for(int i = 0; i < size; i++){
+        if (is_within_bounds(&save[i], E.x, E.y)) {
+            if (E.button == SDL_BUTTON_LEFT) {
+                handle_menu_left_click((&save[i]));
+            } else if (E.button == SDL_BUTTON_RIGHT) {
+                handle_menu_right_click((&save[i]));
+            }
+        }
+    }
+}
+
 void handle_menu_mouse_button(menu_item_s menus[], int size, SDL_MouseButtonEvent E) {
     for(int i = 0; i < size; i++){
         if (is_within_bounds(&menus[i], E.x, E.y)) {
@@ -66,39 +81,41 @@ void handle_menu_mouse_button(menu_item_s menus[], int size, SDL_MouseButtonEven
     }
 }
 
-void handle_game_key_down(SDL_KeyboardEvent e, character_template_s* target)
+void handle_game_key_down(SDL_KeyboardEvent e, character_template_s* target, const Uint8* states)
 {
-
+    
     SDL_Point point;
+    point.x = 0;
+    point.y = 0;
+    if(states[SDL_SCANCODE_W] || states[SDL_SCANCODE_Z]){
+        point.y -= 1;
+    }
+
+    if(states[SDL_SCANCODE_S]){
+        point.y += 1;
+    }
+
+    if(states[SDL_SCANCODE_A] || states[SDL_SCANCODE_Q]){
+        point.x -= 1;
+    }
+
+    if(states[SDL_SCANCODE_D]){
+        point.x += 1;
+    }
+
+
     switch (e.keysym.scancode)
     {
-        case SDL_SCANCODE_W:
-        case SDL_SCANCODE_Z:
-            point.x = 0;
-            point.y = -5;
-            move_to_location(target, point);
-            break;
-        case SDL_SCANCODE_S:
-            point.x = 0;
-            point.y = 5;
-            move_to_location(target, point);
-            break;
-        case SDL_SCANCODE_A:
-        case SDL_SCANCODE_Q:
-            point.x = -5;
-            point.y = 0;
-            move_to_location(target, point);
-            break;
-        case SDL_SCANCODE_D:
-            point.x = 5;
-            point.y = 0;
-            move_to_location(target, point);
-            break;
         case SDL_SCANCODE_ESCAPE:
             sqlite_select(&load_all_saves_db);
             current = MENU;
             break;
     }
+
+    if (current == GAME){
+        move_to_location(target, point);
+    }
+    
 }
 
 void start_game(void* caller){
@@ -106,7 +123,7 @@ void start_game(void* caller){
 }
 
 void show_saves(void* caller){
-
+    current = SAVES;
 }
 
 #endif
