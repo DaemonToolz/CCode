@@ -147,6 +147,12 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        switch(current){
+            case GAME:
+                recalculate_speed(&character);
+                break;
+        }
+
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
         render_page_content();
         SDL_RenderPresent(renderer);

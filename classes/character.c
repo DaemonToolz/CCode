@@ -34,6 +34,10 @@ typedef struct {
     int width;
     int height;
 
+    // Gameplay
+    SDL_Point   cap_speed; 
+    SDL_Point   current_speed;
+
     // Graphics
     SDL_Renderer *renderer;
     SDL_Vertex   outer_shape[4];
@@ -41,7 +45,7 @@ typedef struct {
     int _indices[6];
 
     int total_history;
-    location_history history[1];
+    location_history history[5];
 } character_template_s;
 
 
@@ -49,8 +53,16 @@ void compute_velocity_vector(character_template_s* c, double* vector){
     if(c->total_history == 0){
         return;
     }
-    double dx = c->x - c->history->point.x;
-    double dy = c->y - c->history->point.y;
+    double dx = 0, dy = 0;
+    for(int i = 0; i < c->total_history - 1; i++){
+        dx += c->history[i + 1].point.x - c->history[i].point.x;
+        dy += c->history[i + 1].point.y - c->history[i].point.y;
+    }
+    dx += c->x - c->history[c->total_history].point.x;
+    dy += c->y - c->history[c->total_history].point.y;
+
+    dx /= (c->total_history + 1);
+    dy /= (c->total_history + 1);
     double d = sqrt(dx*dx + dy*dy);
     *(vector) = dx/d * 5, 
     *(vector + 1) = dy/d * 5;
@@ -245,8 +257,37 @@ void move_to_location(character_template_s* c, SDL_Point point){
     c->history[c->total_history].point.x = c->x;
     c->history[c->total_history].point.y = c->y;
     c->history[c->total_history].triggered_at = time(0);
-    c->x += point.x;
-    c->y += point.y;
+
+    if(point.x == 0){
+        if(c->current_speed.x > 0){
+            c->current_speed.x--;
+        }
+
+        if(c->current_speed.x < 0){
+            c->current_speed.x++;
+        }
+    }
+    
+    if(point.y == 0){
+        if(c->current_speed.y > 0){
+            c->current_speed.y--;
+        }
+
+        if(c->current_speed.y < 0){
+            c->current_speed.y++;
+        }
+    }
+
+
+    if(c->current_speed.x + point.x < c->cap_speed.x){
+        c->current_speed.x += point.x;
+    }
+
+    if(c->current_speed.y + point.y < c->cap_speed.y){
+        c->current_speed.y += point.y;
+    }
+    c->x += c->current_speed.x;
+    c->y += c->current_speed.y;
 
     printf("New Position (%i %i) -> (%i %i) \n", c->x, c->y, c->x + point.x, c->y + point.y);
 

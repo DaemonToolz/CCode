@@ -22,22 +22,20 @@ SDL_Renderer *renderer;
 SDL_Texture *text_texture;
 SDL_Rect text_rect;
 
-character_template_s character = {
-    "AEST_01", {}, 200, 200, true
-};
+character_template_s character = { "AEST_01", {}, 200, 200, true, 0, 0, {25, 25}, {0, 0} };
 
 
 character_template_s enemies[3] = {
-    { "EEST_01", {}, 400, 400, true },
-    { "EEST_02", {}, 100, 250, true },
-    { "EEST_03", {}, 500, 150, true },
+    { "EEST_01", {}, 400, 400, true, 0, 0, {5, 5}, {0, 0}  },
+    { "EEST_02", {}, 100, 250, true, 0, 0, {5, 5}, {0, 0}  },
+    { "EEST_03", {}, 500, 150, true, 0, 0, {5, 5}, {0, 0}  },
 };
 
 character_template_s walls[4] = {
-    { "WALL_01", {}, 400, 5,    false, 800, 10 },
-    { "WALL_02", {}, 5,   300,  false, 10, 800 },
-    { "WALL_03", {}, 400, 595,  false, 800, 10 },
-    { "WALL_04", {}, 795, 595,  false, 10, 800 }
+    { "WALL_01", {}, 400, 5,    false, 800, 10, {0, 0}, {0, 0}  },
+    { "WALL_02", {}, 5,   300,  false, 10, 800, {0, 0}, {0, 0}  },
+    { "WALL_03", {}, 400, 595,  false, 800, 10, {0, 0}, {0, 0}  },
+    { "WALL_04", {}, 795, 595,  false, 10, 800, {0, 0}, {0, 0}  }
 };
 
 

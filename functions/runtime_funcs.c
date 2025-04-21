@@ -81,6 +81,21 @@ void handle_menu_mouse_button(menu_item_s menus[], int size, SDL_MouseButtonEven
     }
 }
 
+
+void recalculate_speed(character_template_s* target)
+{
+    
+    SDL_Point point;
+    point.x = 0;
+    point.y = 0;
+
+    if (current == GAME){
+        move_to_location(target, point);
+    }
+    
+}
+
+
 void handle_game_key_down(SDL_KeyboardEvent e, character_template_s* target, const Uint8* states)
 {
     
@@ -88,19 +103,19 @@ void handle_game_key_down(SDL_KeyboardEvent e, character_template_s* target, con
     point.x = 0;
     point.y = 0;
     if(states[SDL_SCANCODE_W] || states[SDL_SCANCODE_Z]){
-        point.y -= 1;
+        point.y -= 2;
     }
 
     if(states[SDL_SCANCODE_S]){
-        point.y += 1;
+        point.y += 2;
     }
 
     if(states[SDL_SCANCODE_A] || states[SDL_SCANCODE_Q]){
-        point.x -= 1;
+        point.x -= 2;
     }
 
     if(states[SDL_SCANCODE_D]){
-        point.x += 1;
+        point.x += 2;
     }
 
 
@@ -111,6 +126,7 @@ void handle_game_key_down(SDL_KeyboardEvent e, character_template_s* target, con
             current = MENU;
             break;
     }
+
 
     if (current == GAME){
         move_to_location(target, point);
